@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Generator Agent</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="white"><animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite"/></circle><circle cx="80" cy="30" r="3" fill="white"><animate attributeName="opacity" values="0;1;0" dur="4s" repeatCount="indefinite" begin="1s"/></circle><circle cx="40" cy="60" r="2" fill="white"><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="2s"/></circle></svg>') repeat;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: 300;
+        }
+
+        .robot-icon {
+            font-size: 3rem;
+            margin-right: 15px;
+            color: #64b5f6;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Main Content Grid */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+            background: linear-gradient(135deg, #64b5f6, #42a5f5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 20px;
+            font-size: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+            resize: vertical;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+        }
+
+        textarea:focus {
+            border-color: #64b5f6;
+            box-shadow: 0 0 20px rgba(100, 181, 246, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* File Upload Styles */
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 80px;
+        }
+
+        .file-upload-label:hover {
+            border-color: #64b5f6;
+            background: rgba(100, 181, 246, 0.1);
+            color: white;
+        }
+
+        .file-upload-label i {
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            min-width: 150px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #42a5f5, #1976d2);
+            color: white;
+            box-shadow: 0 10px 20px rgba(66, 165, 245, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(66, 165, 245, 0.4);
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        /* Loading State */
+        .btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .btn.loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Output Styles */
+        .output {
+            grid-column: 1 / -1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.5s ease-out;
+            margin-top: 20px;
+        }
+
+        .output h2 {
+            color: #333;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .output h2 i {
+            margin-right: 10px;
+            color: #667eea;
+        }
+
+        .output pre {
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #333;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+            display: none;
+            z-index: 1000;
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        .notification.show {
+            display: flex;
+            align-items: center;
+        }
+
+        .notification i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            textarea {
+                min-height: 200px;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .progress-bar.show {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-animation"></div>
+    
+    <!-- Notification -->
+    <div id="notif" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span>File uploaded and processed successfully!</span>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-robot robot-icon"></i>
+                AI Generator Agent
+            </h1>
+            <p class="subtitle">Transform your raw data into structured insights with AI</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Text Input Card -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-edit card-icon"></i>
+                    <h2 class="card-title">Raw Data Input</h2>
+                </div>
+                
+                <form method="post" action="/generate" id="text-form">
+                    <div class="form-group">
+                        <textarea 
+                            name="raw_data" 
+                            placeholder="Paste your raw college data here for AI analysis and formatting..."
+                            id="raw-textarea">{{ raw_text if raw_text else '' }}</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="generate-btn">
+                        <i class="fas fa-magic"></i>
+                        Generate Format
+                    </button>
+                    
+                    <div class="progress-bar" id="text-progress">
+                        <div class="progress-fill"></div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- PDF Upload Card -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-file-pdf card-icon"></i>
+                    <h2 class="card-title">PDF Document Upload</h2>
+                </div>
+                
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <div class="file-upload">
+                            <input type="file" name="pdf_file" accept="application/pdf" required id="pdf-input">
+                            <label for="pdf-input" class="file-upload-label" id="file-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Click to upload PDF or drag and drop</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-secondary" id="upload-btn">
+                        <i class="fas fa-upload"></i>
+                        Upload & Process
+                    </button>
+                    
+                    <div class="progress-bar" id="upload-progress">
+                        <div class="progress-fill"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Output Display -->
+        {% if formatted_output %}
+        <div class="output" id="output-box">
+            <h2>
+                <i class="fas fa-file-alt"></i>
+                Formatted Output
+            </h2>
+            <pre>{{ formatted_output }}</pre>
+        </div>
+        {% endif %}
+
+        {% if upload_message %}
+        <div class="output">
+            <h2>
+                <i class="fas fa-check-circle"></i>
+                Upload Status
+            </h2>
+            <p>{{ upload_message }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Elements
+        const uploadForm = document.getElementById("upload-form");
+        const textForm = document.getElementById("text-form");
+        const notif = document.getElementById("notif");
+        const outputBox = document.getElementById("output-box");
+        const pdfInput = document.getElementById("pdf-input");
+        const fileLabel = document.getElementById("file-label");
+        const uploadBtn = document.getElementById("upload-btn");
+        const generateBtn = document.getElementById("generate-btn");
+        const uploadProgress = document.getElementById("upload-progress");
+        const textProgress = document.getElementById("text-progress");
+
+        // File input change handler
+        pdfInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileLabel.innerHTML = `
+                    <i class="fas fa-file-pdf"></i>
+                    <span>${file.name}</span>
+                `;
+                fileLabel.style.borderColor = "#64b5f6";
+                fileLabel.style.background = "rgba(100, 181, 246, 0.1)";
+            }
+        });
+
+        // Show notification
+        function showNotification(message, isSuccess = true) {
+            const icon = isSuccess ? "fas fa-check-circle" : "fas fa-exclamation-circle";
+            const bgColor = isSuccess ? "linear-gradient(135deg, #4caf50, #45a049)" : "linear-gradient(135deg, #f44336, #d32f2f)";
+            
+            notif.innerHTML = `<i class="${icon}"></i><span>${message}</span>`;
+            notif.style.background = bgColor;
+            notif.classList.add("show");
+            
+            setTimeout(() => {
+                notif.classList.remove("show");
+            }, 4000);
+        }
+
+        // PDF Upload Form Handler
+        uploadForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(uploadForm);
+            
+            // Show loading state
+            uploadBtn.classList.add("loading");
+            uploadBtn.innerHTML = '<i class="fas fa-spinner"></i>Processing...';
+            uploadProgress.classList.add("show");
+
+            try {
+                const res = await fetch("/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                // Show success notification
+                showNotification("PDF uploaded and processed successfully!");
+
+                // Update output
+                if (data && data.message) {
+                    if (!outputBox) {
+                        const div = document.createElement("div");
+                        div.className = "output";
+                        div.innerHTML = `
+                            <h2><i class="fas fa-file-alt"></i>PDF Response</h2>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        `;
+                        document.querySelector('.container').appendChild(div);
+                    } else {
+                        outputBox.innerHTML = `
+                            <h2><i class="fas fa-file-alt"></i>PDF Response</h2>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        `;
+                        outputBox.style.display = "block";
+                    }
+                }
+
+            } catch (error) {
+                showNotification("Error uploading file. Please try again.", false);
+                console.error("Upload error:", error);
+            } finally {
+                // Reset button state
+                uploadBtn.classList.remove("loading");
+                uploadBtn.innerHTML = '<i class="fas fa-upload"></i>Upload & Process';
+                uploadProgress.classList.remove("show");
+            }
+        });
+
+        // Text Form Handler
+        textForm.addEventListener("submit", (e) => {
+            // Show loading state
+            generateBtn.classList.add("loading");
+            generateBtn.innerHTML = '<i class="fas fa-spinner"></i>Generating...';
+            textProgress.classList.add("show");
+        });
+
+        // Drag and drop functionality
+        const fileUpload = document.querySelector('.file-upload');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            fileLabel.style.borderColor = "#64b5f6";
+            fileLabel.style.background = "rgba(100, 181, 246, 0.2)";
+        }
+
+        function unhighlight(e) {
+            fileLabel.style.borderColor = "rgba(255, 255, 255, 0.3)";
+            fileLabel.style.background = "rgba(255, 255, 255, 0.05)";
+        }
+
+        fileUpload.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0 && files[0].type === 'application/pdf') {
+                pdfInput.files = files;
+                fileLabel.innerHTML = `
+                    <i class="fas fa-file-pdf"></i>
+                    <span>${files[0].name}</span>
+                `;
+            }
+        }
+
+        // Auto-resize textarea
+        const textarea = document.getElementById('raw-textarea');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    </script>
+</body>
+</html>
